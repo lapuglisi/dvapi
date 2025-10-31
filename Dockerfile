@@ -1,4 +1,4 @@
-FROM archlinux:latest
+FROM debian:trixie-slim
 
 WORKDIR /app
 
@@ -9,9 +9,7 @@ COPY http/ ./http/
 
 RUN mv ./dvapi.db.dist ./dvapi.db
 
-RUN pacman-key --init && pacman-key --populate archlinux
-
-RUN pacman --noconfirm -Syyu && pacman --noconfirm -S base-devel go
+RUN apt-get -y update && apt-get -y install build-essential ca-certificates
 
 RUN ls -la ./
 
@@ -19,4 +17,7 @@ RUN go build ./
 
 EXPOSE 9098
 
-CMD ["./dvapi"]
+ENV DVAPI_PORT 9098
+ENV DVAPI_HOST "0.0.0.0"
+
+CMD ["/bin/sh", "-c", "./dvapi -port ${DVAPI_PORT:-9098} -host ${DVAPI_HOST:-0.0.0.0}"]
