@@ -46,20 +46,22 @@ func (s *ApiHttpServer) writeResponseJson(w http.ResponseWriter, bytes []byte) (
 	return err
 }
 
+// Setup sets up our ApiHttpServer instance
 func (s *ApiHttpServer) Setup(host string, port int, db *api_db.DuckDatabase) {
 	if len(host) == 0 {
 		host = "0.0.0.0"
 	}
 
+	// Format the listen address based on the arguments
 	s.listenUri = fmt.Sprintf("%s:%d", host, port)
 
 	if s.db = db; s.db == nil {
 		log.Fatal("ApiHttpServer: No database handle defined")
 	}
 
-	// Setup endpoints here
+	// Setup the endpoints here
 	http.HandleFunc("/devices", s.handleDevices)
-	http.HandleFunc("/fetch", s.handleDevicesFetchAll)
+	http.HandleFunc("GET /fetch", s.handleDevicesFetchAll)
 	http.HandleFunc("GET /fetch/id/{id}", s.handleDevicesFetch)
 	http.HandleFunc("GET /fetch/brand/{brands}", s.handleDevicesFetchByBrand)
 	http.HandleFunc("GET /fetch/state/{states}", s.handleDevicesFetchByState)
@@ -70,9 +72,7 @@ func (s *ApiHttpServer) Run() error {
 	return http.ListenAndServe(s.listenUri, nil)
 }
 
-// I'll be using actual implementations of the handlers instead of defining them when calling HandleFunc
-
-// handleDevicesCreate: triggered when handleDevices receives a POST request
+// handleDevicesCreate is triggered when handleDevices receives a POST request
 func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Request) {
 	var device api_model.Device
 	var jsonBytes []byte = make([]byte, 0)
@@ -82,7 +82,7 @@ func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not create the device: %s", err.Error()),
+			Reason: fmt.Sprintf("create device: %s", err.Error()),
 		})
 
 		return
@@ -94,7 +94,7 @@ func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Reque
 	if err = device.FromJsonBytes(jsonBytes); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not create the device: %s", err.Error()),
+			Reason: fmt.Sprintf("create device: %s", err.Error()),
 		})
 
 		return
@@ -104,7 +104,7 @@ func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Reque
 	if err = s.db.CreateDevice(&device); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not create the device: %s", err.Error()),
+			Reason: fmt.Sprintf("create device: %s", err.Error()),
 		})
 
 		return
@@ -112,7 +112,7 @@ func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Reque
 
 	s.writeApiReponse(w, HttpApiResponse{
 		Status: "success",
-		Reason: fmt.Sprintf("device created succesfully. id is %d\n", device.ID),
+		Reason: fmt.Sprintf("device created succesfully."),
 	})
 }
 
@@ -126,7 +126,7 @@ func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not update the device: %s", err.Error()),
+			Reason: fmt.Sprintf("update device: %s", err.Error()),
 		})
 
 		return
@@ -138,7 +138,7 @@ func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Reque
 	if err = device.FromJsonBytes(jsonBytes); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("invalid JSON data: %s", err.Error()),
+			Reason: fmt.Sprintf("update device: %s", err.Error()),
 		})
 
 		return
@@ -148,7 +148,7 @@ func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Reque
 	if err = s.db.UpdateDevice(device); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not update the device: %s", err.Error()),
+			Reason: fmt.Sprintf("update device: %s", err.Error()),
 		})
 
 		return
@@ -170,7 +170,7 @@ func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not delete the device: %s", err.Error()),
+			Reason: fmt.Sprintf("delete device: %s", err.Error()),
 		})
 
 		return
@@ -182,7 +182,7 @@ func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Reque
 	if err = device.FromJsonBytes(jsonBytes); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("invalid JSON data: %s", err.Error()),
+			Reason: fmt.Sprintf("delete device: %s", err.Error()),
 		})
 
 		return
@@ -192,7 +192,7 @@ func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Reque
 	if err = s.db.DeleteDevice(device); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
-			Reason: fmt.Sprintf("could not delete the device: %s", err.Error()),
+			Reason: fmt.Sprintf("delete device: %s", err.Error()),
 		})
 
 		return
@@ -207,10 +207,12 @@ func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Reque
 
 // When handleDevices receives a GET request
 func (s *ApiHttpServer) handleDevicesFetch(w http.ResponseWriter, r *http.Request) {
+	/* Leave it here just as a reminder
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	*/
 
 	var devices api_model.Devices = nil
 	var err error = nil
@@ -248,10 +250,12 @@ func (s *ApiHttpServer) handleDevicesFetch(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *ApiHttpServer) handleDevicesFetchAll(w http.ResponseWriter, r *http.Request) {
+	/* Leave it here as a reminder
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	*/
 
 	var devices api_model.Devices
 	var err error
@@ -277,10 +281,12 @@ func (s *ApiHttpServer) handleDevicesFetchAll(w http.ResponseWriter, r *http.Req
 }
 
 func (s *ApiHttpServer) handleDevicesFetchByBrand(w http.ResponseWriter, r *http.Request) {
+	/* Leave it here as a reminder
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	*/
 
 	var devices api_model.Devices
 	var err error
@@ -311,10 +317,12 @@ func (s *ApiHttpServer) handleDevicesFetchByBrand(w http.ResponseWriter, r *http
 }
 
 func (s *ApiHttpServer) handleDevicesFetchByState(w http.ResponseWriter, r *http.Request) {
+	/* Have I said to leave it here as a reminder already?
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	*/
 
 	var devices api_model.Devices
 	var err error
@@ -343,10 +351,10 @@ func (s *ApiHttpServer) handleDevicesFetchByState(w http.ResponseWriter, r *http
 	s.writeResponseJson(w, jsonBytes)
 }
 
-// handleDevices is the catch-all for devices operations
+// handleDevices is the catch-all handler for devices operations
 func (s *ApiHttpServer) handleDevices(w http.ResponseWriter, r *http.Request) {
 
-	// Accepted methods are GET, POST, PUT, DELETE
+	// Accepted methods are POST, PUT, DELETE
 	switch r.Method {
 	case http.MethodPost:
 		{
@@ -354,7 +362,7 @@ func (s *ApiHttpServer) handleDevices(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-	case http.MethodPut:
+	case http.MethodPatch:
 		{
 			s.handleDevicesUpdate(w, r)
 			break

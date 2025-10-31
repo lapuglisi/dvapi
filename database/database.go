@@ -1,22 +1,25 @@
 package api_db
 
+/*
+* We will be using DuckDB as the database provider
+ */
 import (
+	// "context" // We will not be using context specifics in this simple app
 	"database/sql"
 	"fmt"
 	_ "github.com/duckdb/duckdb-go/v2"
 	api_model "github.com/lapuglisi/dvapi/model"
+	"log"
 	"strings"
 	"time"
 )
 
-/*
-* We will be using DuckDB as the database provider
- */
-
+// DuckDatabase is our main struct for the database interface
 type DuckDatabase struct {
 	db *sql.DB
 }
 
+// dbDevice is somewhat a model to the table 'devices'
 type dbDevice struct {
 	ID        int
 	Name      string
@@ -25,8 +28,7 @@ type dbDevice struct {
 	CreatedOn time.Time
 }
 
-// Function NewDatabse
-// Returns a new pointer handle to a DuckDatabase instance
+// NewDatabse return a new pointer handle to a DuckDatabase instance
 func NewDatabase() *DuckDatabase {
 	return &DuckDatabase{}
 }
@@ -37,6 +39,9 @@ func (ddb *DuckDatabase) Setup() (err error) {
 		return err
 	}
 
+	// TODO: What if duckdb opens the file but it is locked?
+	// It must be handled accordingly
+
 	if err = ddb.db.Ping(); err != nil {
 		ddb.db.Close()
 		return err
@@ -45,8 +50,14 @@ func (ddb *DuckDatabase) Setup() (err error) {
 	return nil
 }
 
+// CreateDevice, as it says, inserts the device 'device' in the database
 func (ddb *DuckDatabase) CreateDevice(device *api_model.Device) (err error) {
-	stmt, err := ddb.db.Prepare("INSERT INTO devices (name, brand, state, created_on) VALUES ($1, $2, $3, NOW())")
+	var insertID int64
+
+	stmt, err := ddb.db.Prepare(`INSERT INTO devices 
+		(name, brand, state, created_on) 
+		VALUES ($1, $2, $3, NOW()) RETURNING id`)
+
 	if err != nil {
 		return err
 	}
@@ -56,28 +67,39 @@ func (ddb *DuckDatabase) CreateDevice(device *api_model.Device) (err error) {
 		return err
 	}
 
-	if lastID, err := result.LastInsertId(); err == nil {
-		device.ID = int(lastID)
+	if insertID, err = result.LastInsertId(); err == nil {
+		device.ID = int(insertID)
 	} else {
-		fmt.Printf("could not get LastInsertId: %s\n", err.Error())
+		log.Printf("could not get LastInsertId: %s", err.Error())
 	}
 
 	return err
 }
 
+// UpdateDevice updates the device 'device'.
+// Note that 'device.ID' MUST NOT be changed, so it's up to the developer
+// to handle it.
 func (ddb *DuckDatabase) UpdateDevice(device api_model.Device) (err error) {
 	// Load the device first for fine-grained error messages
+	if device.ID <= 0 {
+		return fmt.Errorf("invalid device id %d", device.ID)
+	}
+
 	current, err := ddb.loadDevice(device.ID)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("device %d not found", device.ID)
+	} else if err != nil {
 		return err
 	}
 
-	// Apply some logic here
+	// This is where we check if a device is in in-use state
 	if current.State == api_model.DeviceStateInUse {
 		return fmt.Errorf("cannot update a device in 'in-use' state")
 	}
 
 	// Now check for input parameters
+	// This should be done in a smart way, but for the sake of using
+	// only one function to update them all, this will do
 	if len(device.Name) == 0 {
 		device.Name = current.Name
 	}
@@ -106,9 +128,17 @@ func (ddb *DuckDatabase) UpdateDevice(device api_model.Device) (err error) {
 
 func (ddb *DuckDatabase) DeleteDevice(device api_model.Device) (err error) {
 	// Load the device first for fine-grained error messages
+	if device.ID <= 0 {
+		return fmt.Errorf("invalid device id %d", device.ID)
+	}
+
 	current, err := ddb.loadDevice(device.ID)
 	if err != nil {
-		return fmt.Errorf("could not determine the device to be deleted")
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("device %d not found", device.ID)
+		} else {
+			return err
+		}
 	}
 
 	// Apply some logic here
