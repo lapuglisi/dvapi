@@ -1,0 +1,6 @@
+- IMPORTANT: implement test cases
+
+- Improve the API implementation, add some 'context' implementations and the use of
+  go channels (because)
+
+- Learn more about duckdb and its features (async stuff, 'to_json' function, etc)
