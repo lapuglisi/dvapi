@@ -54,9 +54,11 @@ func (ddb *DuckDatabase) Setup(dbfile string) (err error) {
 func (ddb *DuckDatabase) CreateDevice(device *api_model.Device) (err error) {
 	var insertID int64
 
+	// I'm explicitly using 'nextval(seq)' here to make sure
+	// that 'LastInsertId' returns something
 	stmt, err := ddb.db.Prepare(`INSERT INTO devices 
-		(name, brand, state, created_on) 
-		VALUES ($1, $2, $3, NOW()) RETURNING id`)
+		(id, name, brand, state, created_on) 
+		VALUES (nextval('devices_id_seq'), $1, $2, $3, NOW()) RETURNING id`)
 
 	if err != nil {
 		return err
@@ -68,6 +70,7 @@ func (ddb *DuckDatabase) CreateDevice(device *api_model.Device) (err error) {
 	}
 
 	if insertID, err = result.LastInsertId(); err == nil {
+		log.Printf("=> Got LastInsertId = %d\n", insertID)
 		device.ID = int(insertID)
 	} else {
 		log.Printf("could not get LastInsertId: %s", err.Error())
