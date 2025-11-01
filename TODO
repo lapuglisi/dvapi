@@ -1,6 +1,9 @@
 - IMPORTANT: implement test cases
+- IMPORTANT: handle nil buffers on POST|PATCH|DELETE requests
 
 - Improve the API implementation, add some 'context' implementations and the use of
   go channels (because)
 
 - Learn more about duckdb and its features (async stuff, 'to_json' function, etc)
+
+- There is no rule to define a UNIQUE check on the devices (like Name or 'Name-Brand')

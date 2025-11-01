@@ -21,7 +21,7 @@ type DuckDatabase struct {
 
 // dbDevice is somewhat a model to the table 'devices'
 type dbDevice struct {
-	ID        int
+	ID        int64
 	Name      string
 	Brand     string
 	State     string
@@ -42,38 +42,30 @@ func (ddb *DuckDatabase) Setup(dbfile string) (err error) {
 	// TODO: What if duckdb opens the file but it is locked?
 	// It must be handled accordingly
 
-	if err = ddb.db.Ping(); err != nil {
-		ddb.db.Close()
-		return err
-	}
-
 	return nil
 }
 
-// CreateDevice, as it says, inserts the device 'device' in the database
+// 'CreateDevice', as it says, inserts the device 'device' in the database
 func (ddb *DuckDatabase) CreateDevice(device *api_model.Device) (err error) {
-	var insertID int64
 
 	// I'm explicitly using 'nextval(seq)' here to make sure
 	// that 'LastInsertId' returns something
-	stmt, err := ddb.db.Prepare(`INSERT INTO devices 
-		(id, name, brand, state, created_on) 
-		VALUES (nextval('devices_id_seq'), $1, $2, $3, NOW()) RETURNING id`)
+	stmt, err := ddb.db.Prepare(`INSERT INTO devices (name, brand, state, created_on) 
+		VALUES(?, ?, ?, NOW()) RETURNING id, created_on`)
 
 	if err != nil {
 		return err
 	}
 
-	result, err := stmt.Exec(device.Name, device.Brand, device.State)
+	rows, err := stmt.Query(device.Name, device.Brand, device.State)
 	if err != nil {
 		return err
 	}
 
-	if insertID, err = result.LastInsertId(); err == nil {
-		log.Printf("=> Got LastInsertId = %d\n", insertID)
-		device.ID = int(insertID)
-	} else {
-		log.Printf("could not get LastInsertId: %s", err.Error())
+	if rows.Next() {
+		if err = rows.Scan(&device.ID, &device.CreatedOn); err != nil {
+			log.Fatalf("could not get created params for device: %s", err.Error())
+		}
 	}
 
 	return err
@@ -129,6 +121,7 @@ func (ddb *DuckDatabase) UpdateDevice(device api_model.Device) (err error) {
 	return nil
 }
 
+// DeleteDevice: delete the device with 'device.ID' from the db
 func (ddb *DuckDatabase) DeleteDevice(device api_model.Device) (err error) {
 	// Load the device first for fine-grained error messages
 	if device.ID <= 0 {
@@ -188,9 +181,8 @@ func (ddb *DuckDatabase) Fetch(id int) (devices api_model.Devices, err error) {
 	return devices, nil
 }
 
-// /
-// / FetchAll retrieves all devices in the database
-// / Consider retrieving a JSON object directly
+// FetchAll retrieves all devices in the database
+// Consider retrieving a JSON object directly
 func (ddb *DuckDatabase) FetchAll() (devices api_model.Devices, err error) {
 	var sql string = "SELECT id, name, brand, state, created_on from devices order by created_on"
 	var result dbDevice
@@ -243,8 +235,6 @@ func (ddb *DuckDatabase) FetchByBrand(brands []string) (devices api_model.Device
 	for i, brand := range brands {
 		args[i] = brand
 	}
-
-	fmt.Printf("stmt is %v\n", stmt)
 
 	rows, err := stmt.Query(args...)
 	if err != nil {
@@ -316,7 +306,7 @@ func (ddb *DuckDatabase) FetchByState(states []string) (devices api_model.Device
 	return devices, nil
 }
 
-func (ddb *DuckDatabase) loadDevice(id int) (device *api_model.Device, err error) {
+func (ddb *DuckDatabase) loadDevice(id int64) (device *api_model.Device, err error) {
 	var result dbDevice = dbDevice{}
 	var rows *sql.Row = nil
 

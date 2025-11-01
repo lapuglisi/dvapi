@@ -1,3 +1,5 @@
 dvapi
 dvapi.db
 dvapi.db.wal
+dvapi.test.db*
+*.vim
