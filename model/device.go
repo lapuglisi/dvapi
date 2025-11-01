@@ -2,6 +2,7 @@ package dvapi_model
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -16,7 +17,7 @@ const (
 
 // / struct Device is the structure that holds the information for a single Device
 type Device struct {
-	ID        int       `json:"id,omitempty"`
+	ID        int64     `json:"id,omitempty"`
 	Name      string    `json:"name"`
 	Brand     string    `json:"brand,omitempty"`
 	State     string    `json:"state"`
@@ -28,6 +29,10 @@ type Devices []Device
 
 // Device.FromJsonBytes unmarshals 'bytes []byte' into a Device struct
 func (d *Device) FromJsonBytes(bytes []byte) (err error) {
+	if bytes == nil {
+		return fmt.Errorf("invalid arguments")
+	}
+
 	return json.Unmarshal(bytes, d)
 }
 
@@ -38,6 +43,10 @@ func (d *Device) ToJsonBytes() (bytes []byte, err error) {
 
 // Devices.FromJsonBytes marshals 'bytes []byte' into a Devices struct
 func (da *Devices) FromJsonBytes(bytes []byte) (err error) {
+	if bytes == nil {
+		return fmt.Errorf("invalid arguments")
+	}
+
 	return json.Unmarshal(bytes, da)
 }
 
