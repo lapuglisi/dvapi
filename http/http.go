@@ -12,6 +12,12 @@ import (
 	"strings"
 )
 
+// Constants
+const (
+	ApiServerDefaultPort int    = 9098
+	ApiServerDefaultHost string = "0.0.0.0"
+)
+
 // The structure that holds the ApiHttpServer implementation
 type ApiHttpServer struct {
 	listenUri string
@@ -49,7 +55,11 @@ func (s *ApiHttpServer) writeResponseJson(w http.ResponseWriter, bytes []byte) (
 // Setup sets up our ApiHttpServer instance
 func (s *ApiHttpServer) Setup(host string, port int, db *dvapi_db.DuckDatabase) {
 	if len(host) == 0 {
-		host = "0.0.0.0"
+		host = ApiServerDefaultHost
+	}
+
+	if port <= 0 {
+		port = ApiServerDefaultPort
 	}
 
 	// Format the listen address based on the arguments
