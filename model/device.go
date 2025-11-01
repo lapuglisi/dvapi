@@ -1,4 +1,4 @@
-package api_model
+package dvapi_model
 
 import (
 	"encoding/json"

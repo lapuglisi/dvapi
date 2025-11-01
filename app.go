@@ -1,17 +1,17 @@
 package main
 
 import (
-	api_db "github.com/lapuglisi/dvapi/database"
-	api_http "github.com/lapuglisi/dvapi/http"
+	dvapi_db "github.com/lapuglisi/dvapi/database"
+	dvapi_http "github.com/lapuglisi/dvapi/http"
 )
 
 type ApiApplication struct {
-	server api_http.ApiHttpServer
-	db     *api_db.DuckDatabase
+	server dvapi_http.ApiHttpServer
+	db     *dvapi_db.DuckDatabase
 }
 
 func (app *ApiApplication) Setup(host string, port int) (err error) {
-	app.db = api_db.NewDatabase()
+	app.db = dvapi_db.NewDatabase()
 	err = app.db.Setup()
 	if err != nil {
 		return err

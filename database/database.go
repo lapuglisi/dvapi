@@ -1,4 +1,4 @@
-package api_db
+package dvapi_db
 
 /*
 * We will be using DuckDB as the database provider
