@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	dvapi_db "github.com/lapuglisi/dvapi/database"
 	dvapi_http "github.com/lapuglisi/dvapi/http"
+	"os"
 )
 
 type ApiApplication struct {
@@ -10,9 +12,18 @@ type ApiApplication struct {
 	db     *dvapi_db.DuckDatabase
 }
 
+const ApiAppDBFileName string = "dvapi.db"
+
 func (app *ApiApplication) Setup(host string, port int) (err error) {
 	app.db = dvapi_db.NewDatabase()
-	err = app.db.Setup()
+
+	// Get PWDfor the database file as well
+	pwd, err := os.Getwd()
+	if err != nil {
+		pwd = "./"
+	}
+
+	err = app.db.Setup(fmt.Sprintf("%s/%s", pwd, ApiAppDBFileName))
 	if err != nil {
 		return err
 	}

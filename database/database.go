@@ -33,8 +33,8 @@ func NewDatabase() *DuckDatabase {
 	return &DuckDatabase{}
 }
 
-func (ddb *DuckDatabase) Setup() (err error) {
-	ddb.db, err = sql.Open("duckdb", "dvapi.db?access_mode=READ_WRITE")
+func (ddb *DuckDatabase) Setup(dbfile string) (err error) {
+	ddb.db, err = sql.Open("duckdb", fmt.Sprintf("%s?access_mode=READ_WRITE", dbfile))
 	if err != nil {
 		return err
 	}
