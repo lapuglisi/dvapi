@@ -44,6 +44,7 @@ func (s *ApiHttpServer) writeApiReponse(w http.ResponseWriter, e HttpApiResponse
 }
 
 func (s *ApiHttpServer) writeResponseJson(w http.ResponseWriter, bytes []byte) (err error) {
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	total, err := w.Write(bytes)
 
