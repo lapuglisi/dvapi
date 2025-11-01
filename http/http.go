@@ -71,10 +71,10 @@ func (s *ApiHttpServer) Setup(host string, port int, db *dvapi_db.DuckDatabase) 
 
 	// Setup the endpoints here
 	http.HandleFunc("/devices", s.handleDevices)
-	http.HandleFunc("GET /fetch", s.handleDevicesFetchAll)
-	http.HandleFunc("GET /fetch/id/{id}", s.handleDevicesFetch)
-	http.HandleFunc("GET /fetch/brand/{brands}", s.handleDevicesFetchByBrand)
-	http.HandleFunc("GET /fetch/state/{states}", s.handleDevicesFetchByState)
+	http.HandleFunc("GET /fetch", s.HandleDevicesFetchAll)
+	http.HandleFunc("GET /fetch/id/{id}", s.HandleDevicesFetch)
+	http.HandleFunc("GET /fetch/brand/{brands}", s.HandleDevicesFetchByBrand)
+	http.HandleFunc("GET /fetch/state/{states}", s.HandleDevicesFetchByState)
 }
 
 func (s *ApiHttpServer) Run() error {
@@ -82,8 +82,8 @@ func (s *ApiHttpServer) Run() error {
 	return http.ListenAndServe(s.listenUri, nil)
 }
 
-// handleDevicesCreate is triggered when handleDevices receives a POST request
-func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesCreate is triggered when handleDevices receives a POST request
+func (s *ApiHttpServer) HandleDevicesCreate(w http.ResponseWriter, r *http.Request) {
 	var device dvapi_model.Device
 	var jsonBytes []byte = make([]byte, 0)
 	var err error
@@ -126,8 +126,8 @@ func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// Triggered when handleDevices receives a PUT request
-func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesUpdate is triggered when handleDevices receives a PATCH request
+func (s *ApiHttpServer) HandleDevicesUpdate(w http.ResponseWriter, r *http.Request) {
 	var device dvapi_model.Device
 	var jsonBytes []byte = make([]byte, 0)
 	var err error
@@ -170,8 +170,8 @@ func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// Triggered when handleDevices receives a DELETE request
-func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesDelete is triggered when handleDevices receives a DELETE request
+func (s *ApiHttpServer) HandleDevicesDelete(w http.ResponseWriter, r *http.Request) {
 	var device dvapi_model.Device
 	var jsonBytes []byte = make([]byte, 0)
 	var err error
@@ -215,8 +215,8 @@ func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Reque
 
 }
 
-// When handleDevices receives a GET request
-func (s *ApiHttpServer) handleDevicesFetch(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesFetch is triggered when the API receives a 'GET /fetch/id/{id}' request
+func (s *ApiHttpServer) HandleDevicesFetch(w http.ResponseWriter, r *http.Request) {
 	/* Leave it here just as a reminder
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -259,7 +259,8 @@ func (s *ApiHttpServer) handleDevicesFetch(w http.ResponseWriter, r *http.Reques
 	s.writeResponseJson(w, jsonBytes)
 }
 
-func (s *ApiHttpServer) handleDevicesFetchAll(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesFetchAll is triggered when the API receives a 'GET /fetch' request
+func (s *ApiHttpServer) HandleDevicesFetchAll(w http.ResponseWriter, r *http.Request) {
 	/* Leave it here as a reminder
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -290,7 +291,10 @@ func (s *ApiHttpServer) handleDevicesFetchAll(w http.ResponseWriter, r *http.Req
 	s.writeResponseJson(w, jsonBytes)
 }
 
-func (s *ApiHttpServer) handleDevicesFetchByBrand(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesFetchByBrand is triggered when
+// the API receives a 'GET /fetch/brand/{brands}' request
+// - {brands} is a comma delimited string: Brand1[,Brand2,Brand3]
+func (s *ApiHttpServer) HandleDevicesFetchByBrand(w http.ResponseWriter, r *http.Request) {
 	/* Leave it here as a reminder
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -326,7 +330,10 @@ func (s *ApiHttpServer) handleDevicesFetchByBrand(w http.ResponseWriter, r *http
 
 }
 
-func (s *ApiHttpServer) handleDevicesFetchByState(w http.ResponseWriter, r *http.Request) {
+// HandleDevicesFetchByState is triggered when
+// the API receives a 'GET /fetch/state/{states}' request
+// - {states} is a comma delimited string: state1[,state2,state3]
+func (s *ApiHttpServer) HandleDevicesFetchByState(w http.ResponseWriter, r *http.Request) {
 	/* Have I said to leave it here as a reminder already?
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -362,25 +369,26 @@ func (s *ApiHttpServer) handleDevicesFetchByState(w http.ResponseWriter, r *http
 }
 
 // handleDevices is the catch-all handler for devices operations
+// It does not need to be exported
 func (s *ApiHttpServer) handleDevices(w http.ResponseWriter, r *http.Request) {
 
 	// Accepted methods are POST, PUT, DELETE
 	switch r.Method {
 	case http.MethodPost:
 		{
-			s.handleDevicesCreate(w, r)
+			s.HandleDevicesCreate(w, r)
 			break
 		}
 
 	case http.MethodPatch:
 		{
-			s.handleDevicesUpdate(w, r)
+			s.HandleDevicesUpdate(w, r)
 			break
 		}
 
 	case http.MethodDelete:
 		{
-			s.handleDevicesDelete(w, r)
+			s.HandleDevicesDelete(w, r)
 			break
 		}
 
