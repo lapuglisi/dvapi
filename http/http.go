@@ -1,10 +1,10 @@
-package api_http
+package dvapi_http
 
 import (
 	"encoding/json"
 	"fmt"
-	api_db "github.com/lapuglisi/dvapi/database"
-	api_model "github.com/lapuglisi/dvapi/model"
+	dvapi_db "github.com/lapuglisi/dvapi/database"
+	dvapi_model "github.com/lapuglisi/dvapi/model"
 	"io"
 	"log"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 // The structure that holds the ApiHttpServer implementation
 type ApiHttpServer struct {
 	listenUri string
-	db        *api_db.DuckDatabase
+	db        *dvapi_db.DuckDatabase
 }
 
 // HttpErrorResponse is used to send errors to a http.Request
@@ -47,7 +47,7 @@ func (s *ApiHttpServer) writeResponseJson(w http.ResponseWriter, bytes []byte) (
 }
 
 // Setup sets up our ApiHttpServer instance
-func (s *ApiHttpServer) Setup(host string, port int, db *api_db.DuckDatabase) {
+func (s *ApiHttpServer) Setup(host string, port int, db *dvapi_db.DuckDatabase) {
 	if len(host) == 0 {
 		host = "0.0.0.0"
 	}
@@ -74,7 +74,7 @@ func (s *ApiHttpServer) Run() error {
 
 // handleDevicesCreate is triggered when handleDevices receives a POST request
 func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Request) {
-	var device api_model.Device
+	var device dvapi_model.Device
 	var jsonBytes []byte = make([]byte, 0)
 	var err error
 
@@ -118,7 +118,7 @@ func (s *ApiHttpServer) handleDevicesCreate(w http.ResponseWriter, r *http.Reque
 
 // Triggered when handleDevices receives a PUT request
 func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Request) {
-	var device api_model.Device
+	var device dvapi_model.Device
 	var jsonBytes []byte = make([]byte, 0)
 	var err error
 
@@ -162,7 +162,7 @@ func (s *ApiHttpServer) handleDevicesUpdate(w http.ResponseWriter, r *http.Reque
 
 // Triggered when handleDevices receives a DELETE request
 func (s *ApiHttpServer) handleDevicesDelete(w http.ResponseWriter, r *http.Request) {
-	var device api_model.Device
+	var device dvapi_model.Device
 	var jsonBytes []byte = make([]byte, 0)
 	var err error
 
@@ -214,7 +214,7 @@ func (s *ApiHttpServer) handleDevicesFetch(w http.ResponseWriter, r *http.Reques
 	}
 	*/
 
-	var devices api_model.Devices = nil
+	var devices dvapi_model.Devices = nil
 	var err error = nil
 	var jsonBytes []byte = nil
 
@@ -257,7 +257,7 @@ func (s *ApiHttpServer) handleDevicesFetchAll(w http.ResponseWriter, r *http.Req
 	}
 	*/
 
-	var devices api_model.Devices
+	var devices dvapi_model.Devices
 	var err error
 	if devices, err = s.db.FetchAll(); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
@@ -288,7 +288,7 @@ func (s *ApiHttpServer) handleDevicesFetchByBrand(w http.ResponseWriter, r *http
 	}
 	*/
 
-	var devices api_model.Devices
+	var devices dvapi_model.Devices
 	var err error
 
 	args := r.PathValue("brands")
@@ -324,7 +324,7 @@ func (s *ApiHttpServer) handleDevicesFetchByState(w http.ResponseWriter, r *http
 	}
 	*/
 
-	var devices api_model.Devices
+	var devices dvapi_model.Devices
 	var err error
 
 	args := r.PathValue("states")
