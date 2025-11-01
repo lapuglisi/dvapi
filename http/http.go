@@ -46,9 +46,7 @@ func (s *ApiHttpServer) writeApiReponse(w http.ResponseWriter, e HttpApiResponse
 func (s *ApiHttpServer) writeResponseJson(w http.ResponseWriter, bytes []byte) (err error) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	total, err := w.Write(bytes)
-
-	log.Printf("writeReponseJson: wrote %d bytes\n", total)
+	_, err = w.Write(bytes)
 
 	return err
 }
@@ -100,8 +98,6 @@ func (s *ApiHttpServer) HandleDevicesCreate(w http.ResponseWriter, r *http.Reque
 	}
 	defer r.Body.Close()
 
-	log.Printf("[handleDevicesCreate] received data '%s'\n", string(jsonBytes))
-
 	if err = device.FromJsonBytes(jsonBytes); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
 			Status: "error",
@@ -121,10 +117,18 @@ func (s *ApiHttpServer) HandleDevicesCreate(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	s.writeApiReponse(w, HttpApiResponse{
-		Status: "success",
-		Reason: fmt.Sprintf("device created succesfully."),
-	})
+	// TODO: Apply the same approach to all device operations
+	retBytes, err := json.Marshal(device)
+	rs := HttpApiResponse{}
+	if err != nil {
+		rs.Status = "error"
+		rs.Reason = "could not prepare the device JSON"
+	} else {
+		rs.Status = "success"
+		rs.Reason = string(retBytes)
+	}
+
+	s.writeApiReponse(w, rs)
 }
 
 // HandleDevicesUpdate is triggered when handleDevices receives a PATCH request
@@ -143,8 +147,6 @@ func (s *ApiHttpServer) HandleDevicesUpdate(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	defer r.Body.Close()
-
-	log.Printf("[handleDevicesUpdate] received data '%s'\n", string(jsonBytes))
 
 	if err = device.FromJsonBytes(jsonBytes); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
@@ -187,8 +189,6 @@ func (s *ApiHttpServer) HandleDevicesDelete(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	defer r.Body.Close()
-
-	log.Printf("[handleDevicesDelete] received data '%s'\n", string(jsonBytes))
 
 	if err = device.FromJsonBytes(jsonBytes); err != nil {
 		s.writeApiReponse(w, HttpApiResponse{
